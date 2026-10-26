@@ -77,23 +77,27 @@ function App() {
     };
   }, [theme]);
 
-  const results = useMemo<CategoryResult[]>(() => {
+  const target = parseInt(targetPercent) || 90;
+
+  const results = useMemo<(CategoryResult & { needed: number })[]>(() => {
     return categories.map((cat) => {
       const devices = parseInt(cat.devices) || 0;
       const accessories = parseInt(cat.accessories) || 0;
       const percentage = devices > 0 ? Math.round((accessories / devices) * 100) : 0;
-      return { name: cat.name, devices, accessories, percentage };
+      const needed = devices > 0 ? Math.max(0, Math.ceil((devices * target) / 100) - accessories) : 0;
+      return { name: cat.name, devices, accessories, percentage, needed };
     });
-  }, [categories]);
+  }, [categories, target]);
 
   const totals = useMemo(() => {
     const totalDevices = results.reduce((sum, r) => sum + r.devices, 0);
     const totalAccessories = results.reduce((sum, r) => sum + r.accessories, 0);
     const totalPercentage = totalDevices > 0 ? Math.round((totalAccessories / totalDevices) * 100) : 0;
-    return { totalDevices, totalAccessories, totalPercentage };
-  }, [results]);
+    const totalNeeded = totalDevices > 0 ? Math.max(0, Math.ceil((totalDevices * target) / 100) - totalAccessories) : 0;
+    return { totalDevices, totalAccessories, totalPercentage, totalNeeded };
+  }, [results, target]);
 
-  const target = parseInt(targetPercent) || 90;
+
 
   const updateCategory = (index: number, field: 'name' | 'devices' | 'accessories', value: string) => {
     setCategories((prev) => {
@@ -275,6 +279,11 @@ function App() {
                       <div className={`text-xs font-medium ${getStatusColor(result.percentage)}`}>
                         {getStatusLabel(result.percentage)}
                       </div>
+                      {result.needed > 0 && (
+                        <div className={`text-xs ${t.textSecondary} mt-1`}>
+                          Ещё {result.needed} шт.
+                        </div>
+                      )}
                     </div>
                     {categories.length > 1 && (
                       <button
@@ -353,6 +362,11 @@ function App() {
                   {totals.totalPercentage}%
                 </div>
                 <div className={`text-xs ${t.textSecondary} mt-1 font-medium`}>Общий процент</div>
+                {totals.totalNeeded > 0 && (
+                  <div className={`text-xs text-[#FC850D] mt-2 font-semibold`}>
+                    Нужно ещё: {totals.totalNeeded} шт.
+                  </div>
+                )}
               </div>
             </div>
 
@@ -392,7 +406,12 @@ function App() {
                   <div>
                     <p className="text-[#FC850D] font-semibold text-sm">Почти норма</p>
                     <p className={`${t.textSecondary} text-xs mt-0.5`}>
-                      Не хватает {target - totals.totalPercentage}% до плана. Усильте допродажи аксессуаров.
+                      Не хватает {target - totals.totalPercentage}% до плана.
+                      {totals.totalNeeded > 0 && (
+                        <span className="block mt-1">
+                          <strong className="text-[#FC850D]">Продайте ещё {totals.totalNeeded} аксессуаров</strong> для достижения цели.
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -404,7 +423,12 @@ function App() {
                   <div>
                     <p className="text-red-400 font-semibold text-sm">Низкий показатель</p>
                     <p className={`${t.textSecondary} text-xs mt-0.5`}>
-                      Процент прикрепления значительно ниже нормы. Необходимо усилить работу по продаже сопутствующих товаров.
+                      Процент прикрепления значительно ниже нормы.
+                      {totals.totalNeeded > 0 && (
+                        <span className="block mt-1">
+                          <strong className="text-red-400">Продайте ещё {totals.totalNeeded} аксессуаров</strong> для достижения цели.
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>
