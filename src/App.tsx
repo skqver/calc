@@ -23,7 +23,7 @@ function App() {
     { name: 'Планшеты', devices: '', accessories: '' },
   ]);
 
-  const [targetPercent, setTargetPercent] = useState<string>('80');
+  const [targetPercent, setTargetPercent] = useState<string>('90');
 
   useEffect(() => {
     localStorage.setItem('dns-calc-theme', theme);
@@ -93,7 +93,7 @@ function App() {
     return { totalDevices, totalAccessories, totalPercentage };
   }, [results]);
 
-  const target = parseInt(targetPercent) || 80;
+  const target = parseInt(targetPercent) || 90;
 
   const updateCategory = (index: number, field: 'name' | 'devices' | 'accessories', value: string) => {
     setCategories((prev) => {
